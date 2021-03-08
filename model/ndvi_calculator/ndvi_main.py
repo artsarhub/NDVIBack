@@ -39,6 +39,7 @@ def ndvi(hgt_path, polygon_wkt):
     dir = os.path.dirname(abs_path)
     time = datetime.today().strftime('%Y%m%d%H%M%S')
     out_path = dir + "/" + time + ".tif"
+    tif_filename = '{}.tif'.format(time)
 
     # Запись в tif 4х цветной картинки с ndvi
     create_4_chanel_tiff_from_ndvi_array(arr4, x, y, dx, dy, out_path)
@@ -47,6 +48,6 @@ def ndvi(hgt_path, polygon_wkt):
     # Получаем статистику по ndvi
     min, max, mean, median = get_statistics(arr4)
 
-    return out_path, min, max, mean, median
+    return out_path, min, max, mean, median, tif_filename
 
 

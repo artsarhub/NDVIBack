@@ -48,5 +48,17 @@ def get_progress():
         return jsonify('not ok')
 
 
+@app.route('/get_result')
+def get_result():
+    proc_uuid = request.args.get('proc_uuid')
+    if not proc_uuid:
+        return jsonify({'error': 1, 'message': 'Запрос не содержит UUID процесса'}), 400
+    result = modis_service.get_result(proc_uuid)
+    if result:
+        return jsonify(result)
+    else:
+        return jsonify({'error': 1, 'message': 'Ошибка получения результатов'}), 500
+
+
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')

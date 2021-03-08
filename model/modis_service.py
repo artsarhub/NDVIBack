@@ -9,7 +9,8 @@ from multiprocessing import Process
 import os
 import json
 from .ndvi_calculator import ndvi_main
-
+from typing import Optional, List
+import time
 
 
 def start_calc_ndvi(polygon: str, date: str):
@@ -61,7 +62,7 @@ def get_dir_list() -> list:
 
 
 def get_hv_by_coords(lon: float, lat: float) -> str:
-    data = np.genfromtxt('sn_bound_10deg.txt',
+    data = np.genfromtxt('/home/artem/PycharmProjects/NDVIBack/sn_bound_10deg.txt',
                          skip_header=7,
                          skip_footer=3)
     in_tile = False
@@ -92,7 +93,7 @@ def start_calc_ndvi_proc(proc_uuid: str, polygon: str, date: str):
     log_file_path = '{}/{}/log.json'.format(settings.TMP_DATA_PATH, proc_uuid)
 
     hdf_file_path = download_hdf(lon, lat, formatted_date, proc_uuid)
-    viktor_entry_point(polygon, hdf_file_path, log_file_path)
+    viktor_entry_point(polygon, hdf_file_path, log_file_path, proc_uuid)
 
 
 
@@ -174,10 +175,31 @@ def update_log(log_file_path: str,
         log_f.write(json.dumps(cur_log))
 
 
-def viktor_entry_point(polygon: str, hdf_file_path: str, log_file_path: str):
+def viktor_entry_point(polygon: str, hdf_file_path: str, log_file_path: str, proc_uuid: str):
 
     print(polygon, hdf_file_path)
-    result_file, min, max, mean, median = ndvi_main.ndvi(hdf_file_path, polygon)
+    result_file, min, max, mean, median, tif_filename = ndvi_main.ndvi(hdf_file_path, polygon)
     print(result_file, min, max, mean, median)
 
+    result_log_file_path = '{}/{}/result.json'.format(settings.TMP_DATA_PATH, proc_uuid)
+    with open(result_log_file_path, 'w') as res_f:
+        result_log_dict = {
+            'tif_name': tif_filename,
+            'min': min,
+            'max': max,
+            'mean': mean,
+            'median': median,
+        }
+        res_f.write(json.dumps(result_log_dict))
+
+    time.sleep(1)
     update_log(log_file_path, total_progress=100)
+
+
+def get_result(proc_uuid: str) -> Optional[dict]:
+    result_path = '{}/{}/result.json'.format(settings.TMP_DATA_PATH, proc_uuid)
+    if os.path.exists(result_path):
+        with open(result_path, 'r') as result_f:
+            result_json = json.loads(result_f.read())
+            return result_json
+    return None
