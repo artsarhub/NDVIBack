@@ -1,0 +1,21 @@
+#!/bin/sh
+
+sudo apt install gdal-bin
+sudo apt install gdal-dev
+
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate
+
+
+pip install Numpy
+export C_INCLUDE_PATH=/usr/include/gdal
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+ogrinfo --version
+pip install GDAL==XXX
+pip install pyModis
+
+
+python3 run.py
+
+
