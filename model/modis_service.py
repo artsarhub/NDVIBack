@@ -22,9 +22,9 @@ def start_calc_ndvi(polygon: str, date: str):
         return None
     else:
         proc_uuid = str(uuid1())
-        lon = linear_ring.GetPoint(0)[0]
-        lat = linear_ring.GetPoint(0)[1]
-        formated_date = datetime.strptime(date, '%Y.%m.%d')
+        # lon = linear_ring.GetPoint(0)[0]
+        # lat = linear_ring.GetPoint(0)[1]
+        # formated_date = datetime.strptime(date, '%Y.%m.%d')
         try:
             proc_dir = '{}/{}'.format(settings.TMP_DATA_PATH, proc_uuid)
             os.mkdir(proc_dir)
@@ -38,8 +38,8 @@ def start_calc_ndvi(polygon: str, date: str):
                 lof_f.write(json.dumps(log_message))
         except OSError as e:
             print(e)
-        p = Process(target=download_hdf,
-                    args=(lon, lat, formated_date, proc_uuid))
+        p = Process(target=start_calc_ndvi_proc,
+                    args=(proc_uuid, polygon, date))
         p.start()
         # download_hdf(lon, lat, formated_date)
         return proc_uuid
@@ -81,7 +81,20 @@ def get_file_by_hv(date: datetime, hv: str) -> str:
     return hdf_file
 
 
-def download_hdf(lon: float, lat: float, date: datetime, proc_uuid: str):
+def start_calc_ndvi_proc(proc_uuid: str, polygon: str, date: str):
+    ogr_polygon = ogr.CreateGeometryFromWkt(polygon)
+    linear_ring = ogr_polygon.GetGeometryRef(0)
+    lon = linear_ring.GetPoint(0)[0]
+    lat = linear_ring.GetPoint(0)[1]
+    formatted_date = datetime.strptime(date, '%Y.%m.%d')
+    log_file_path = '{}/{}/log.json'.format(settings.TMP_DATA_PATH, proc_uuid)
+
+    hdf_file_path = download_hdf(lon, lat, formatted_date, proc_uuid)
+    viktor_entry_point(polygon, hdf_file_path, log_file_path)
+
+
+
+def download_hdf(lon: float, lat: float, date: datetime, proc_uuid: str) -> str:
     hv = get_hv_by_coords(lon, lat)
     date_str = date.strftime('%Y.%m.%d')
     file_name = get_file_by_hv(date, hv)
@@ -103,7 +116,10 @@ def download_hdf(lon: float, lat: float, date: datetime, proc_uuid: str):
     for file in files:
         file_name = file['name']
         url = file['url']
-        with open('{}/{}/{}'.format(settings.TMP_DATA_PATH, proc_uuid, file_name), "wb") as f:
+        hdf_file_path = '{}/{}'.format(settings.MODIS_DATA_PATH, file_name)
+        if os.path.exists(hdf_file_path):
+            continue
+        with open(hdf_file_path, "wb") as f:
             print("Downloading {}".format(file_name))
             with requests.Session() as session:
                 session.auth = (settings.NASA_USERNAME, settings.NASA_PASSWORD)
@@ -124,7 +140,8 @@ def download_hdf(lon: float, lat: float, date: datetime, proc_uuid: str):
                         sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (100 - done)))
                         sys.stdout.flush()
         update_log(log_file_path, total_progress=50)
-    update_log(log_file_path, total_progress=100)
+    update_log(log_file_path, total_progress=90)
+    return '{}/{}'.format(settings.MODIS_DATA_PATH, files[0]['name'])
 
 
 def get_progress(proc_uuid):
@@ -153,3 +170,7 @@ def update_log(log_file_path: str,
         if error:
             cur_log['error'] = error
         log_f.write(json.dumps(cur_log))
+
+
+def viktor_entry_point(polygon: str, hdf_file_path: str, log_file_path: str):
+    update_log(log_file_path, total_progress=100)

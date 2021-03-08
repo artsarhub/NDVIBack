@@ -15,6 +15,10 @@ def before_fr():
         os.mkdir(settings.TMP_DATA_PATH)
     except OSError as e:
         print(e)
+    try:
+        os.mkdir(settings.MODIS_DATA_PATH)
+    except OSError as e:
+        print(e)
 
 
 @app.route('/get_folder_list')
