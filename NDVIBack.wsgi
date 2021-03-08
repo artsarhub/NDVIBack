@@ -7,4 +7,4 @@ with open(activate_this) as file_:
 import sys
 sys.path.insert(0, '/opt/NDVIBack')
 
-from NDVIBack import app as application
+from app import app as application
