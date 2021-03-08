@@ -62,7 +62,8 @@ def get_dir_list() -> list:
 
 
 def get_hv_by_coords(lon: float, lat: float) -> str:
-    data = np.genfromtxt('/home/artem/PycharmProjects/NDVIBack/sn_bound_10deg.txt',
+    settings_path = os.path.dirname(os.path.abspath(__file__))+"/../sn_bound_10deg.txt"
+    data = np.genfromtxt(settings_path,
                          skip_header=7,
                          skip_footer=3)
     in_tile = False
