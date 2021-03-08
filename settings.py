@@ -5,3 +5,4 @@ NASA_USERNAME = 'VGalkin'
 NASA_PASSWORD = 'Edgal198'
 
 TMP_DATA_PATH = './tmp_data'
+MODIS_DATA_PATH = '{}/modis'.format(TMP_DATA_PATH)
