@@ -186,10 +186,10 @@ def viktor_entry_point(polygon: str, hdf_file_path: str, log_file_path: str, pro
     with open(result_log_file_path, 'w') as res_f:
         result_log_dict = {
             'tif_name': tif_filename,
-            'min': min,
-            'max': max,
-            'mean': mean,
-            'median': median,
+            'min': float('{:.10f}'.format(min)),
+            'max': float('{:.10f}'.format(max)),
+            'mean': float('{:.10f}'.format(mean)),
+            'median': float('{:.10f}'.format(median)),
         }
         res_f.write(json.dumps(result_log_dict))
 
