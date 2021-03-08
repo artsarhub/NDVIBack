@@ -8,6 +8,8 @@ from uuid import uuid1
 from multiprocessing import Process
 import os
 import json
+from .ndvi_calculator import ndvi_main
+
 
 
 def start_calc_ndvi(polygon: str, date: str):
@@ -173,4 +175,9 @@ def update_log(log_file_path: str,
 
 
 def viktor_entry_point(polygon: str, hdf_file_path: str, log_file_path: str):
+
+    print(polygon, hdf_file_path)
+    result_file, min, max, mean, median = ndvi_main.ndvi(hdf_file_path, polygon)
+    print(result_file, min, max, mean, median)
+
     update_log(log_file_path, total_progress=100)
