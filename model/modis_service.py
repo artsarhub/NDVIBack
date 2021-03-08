@@ -77,10 +77,12 @@ def get_hv_by_coords(lon: float, lat: float) -> str:
     return 'h{:0>2d}v{:0>2d}'.format(horiz, vert)
 
 
-def get_file_by_hv(date: datetime, hv: str) -> str:
+def get_file_by_hv(date: datetime, hv: str) -> Optional[str]:
     date_str = date.strftime('%Y.%m.%d')
     html = get_html('{}/{}'.format(settings.COMMON_MODIS_DATA_URL, date_str))
     files = [file.split('href="')[1].split('">')[0] for file in html.split('\n') if hv in file]
+    if len(files) == 0:
+        return None
     hdf_file = [file for file in files if file.endswith('.hdf')][0]
     return hdf_file
 
@@ -97,13 +99,15 @@ def start_calc_ndvi_proc(proc_uuid: str, polygon: str, date: str):
     viktor_entry_point(polygon, hdf_file_path, log_file_path, proc_uuid)
 
 
-
-def download_hdf(lon: float, lat: float, date: datetime, proc_uuid: str) -> str:
+def download_hdf(lon: float, lat: float, date: datetime, proc_uuid: str) -> Optional[str]:
+    log_file_path = '{}/{}/log.json'.format(settings.TMP_DATA_PATH, proc_uuid)
     hv = get_hv_by_coords(lon, lat)
     date_str = date.strftime('%Y.%m.%d')
     file_name = get_file_by_hv(date, hv)
+    if not file_name:
+        update_log(log_file_path, error=1, message='Нет данных этого района для заданной даты', total_progress=100)
+        raise Exception('Нет данных этого района для заданной даты')
     url = '{}/{}/{}'.format(settings.COMMON_MODIS_DATA_URL, date_str, file_name)
-    log_file_path = '{}/{}/log.json'.format(settings.TMP_DATA_PATH, proc_uuid)
     # print(url)
 
     files = [
